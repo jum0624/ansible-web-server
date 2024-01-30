@@ -1,0 +1,67 @@
+---
+- name: Deploy DB Server with MySQL
+  hosts: dbserver
+  tasks:
+    - name: install mysql-server
+      yum:
+        name: mariadb105-server
+        state: latest
+
+    - name: Copy sql file  
+      copy:
+        src: source/create_db_webtest.sql
+        dest: /tmp/create_db_webtest.sql
+
+    - name: MySQL Runnig
+      service:
+        name: mariadb
+        state: started
+
+    - name: Run sql
+      shell: "mysql -uroot < /tmp/create_db_webtest.sql"
+      register: db_result
+      ignore_errors: yes
+
+- name: Install package
+  hosts: webserver
+  vars:
+    - var1: "Test"
+
+  tasks:
+    - name: Install http
+      yum:
+        name: httpd
+        state: latest
+
+    - name: Install php package
+      yum:
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - php
+        - php-common
+        - php-opcache
+        - php-cli
+        - php-gd
+        - php-curl
+        - php-mysqlnd
+        - php-mysqli
+
+    - name: Copy index.php file
+      template:
+        src: source/index.php.j2
+        dest: /var/www/html/index.php
+
+    - name: Webserver Runnig
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+
+    - name: copy php source
+      copy:
+        src: "{{ item }}"
+        dest: /var/www/html/
+      loop:
+        - source/create.php
+        - source/process_create.php

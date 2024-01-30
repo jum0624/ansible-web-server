@@ -1,0 +1,12 @@
+---
+- name: Connection db
+  hosts: serverb
+  tasks:
+    - name: copy process_create.php
+      copy:
+        src: 'source/{{ item }}'
+        dest: '/var/www/html/{{ item }}'
+      loop:
+        - process_create.php
+        - create.php
+
